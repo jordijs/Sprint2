@@ -6,6 +6,8 @@ SELECT nombre, precio FROM producto;
 
 #3. Llista totes les columnes de la taula "producto".
 SELECT * FROM producto;
+#3: És correcta, però pots fer servir també SHOW_COLUMNS()
+SHOW COLUMNS FROM producto;
 
 #4. Llista el nom dels "productos", el preu en euros i el preu en dòlars nord-americans (USD).
 SELECT nombre, precio, precio * 0.9793256 FROM producto;
@@ -125,19 +127,22 @@ SELECT producto.nombre FROM producto INNER JOIN fabricante ON fabricante.codigo 
 SELECT producto.nombre FROM producto INNER JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE producto.precio >= (SELECT producto.precio FROM producto INNER JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE fabricante.nombre LIKE "Lenovo" ORDER BY producto.precio DESC LIMIT 1);
 
 #41. Llista tots els productes del fabricant Asus que tenen un preu superior al preu mitjà de tots els seus productes.
-SELECT producto.nombre FROM producto INNER JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE producto.precio > (SELECT AVG (producto.precio)FROM producto INNER JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE fabricante.nombre LIKE "Asus");
-
+SELECT producto.alumno_se_matricula_asignaturanombre FROM producto LEFT JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE producto.precio > (SELECT AVG (producto.precio)FROM producto INNER JOIN fabricante ON fabricante.codigo = producto.codigo_fabricante WHERE fabricante.nombre LIKE "Asus") AND fabricante.nombre LIKE "Asus";
+#41: No és correcta. CORREGIT. ARA JA FUNCIONA
 
 #UNIVERSIDAD
 
 #1. Retorna un llistat amb el primer cognom, segon cognom i el nom de tots els/les alumnes. El llistat haurà d'estar ordenat alfabèticament de menor a major pel primer cognom, segon cognom i nom.
 SELECT apellido1, apellido2, nombre FROM persona WHERE tipo LIKE "alumno" ORDER BY apellido1, apellido2, nombre	ASC;
+#1: No mostres profes sense departament. Que no hi hagi a les dades, no vol dir que no es puguin crear. I si es crean, han d'entrar en aquesta consulta.
 
 #2. Esbrina el nom i els dos cognoms dels/les alumnes que no han donat d'alta el seu número de telèfon en la base de dades.
 SELECT nombre, apellido1, apellido2 FROM persona WHERE tipo LIKE "alumno" AND telefono IS NULL;
+#Incorrecte
 
 #3. Retorna el llistat dels/les alumnes que van néixer en 1999.
 SELECT nombre, apellido1, apellido2 FROM persona WHERE tipo LIKE "alumno" AND fecha_nacimiento LIKE "1999%";
+#Incorrecte
 
 #4. Retorna el llistat de professors/es que no han donat d'alta el seu número de telèfon en la base de dades i a més el seu NIF acaba en K.
 SELECT nombre, apellido1, apellido2 FROM persona WHERE tipo LIKE "profesor" AND telefono IS NULL AND nif LIKE "%K";
@@ -147,6 +152,7 @@ SELECT nombre FROM asignatura WHERE cuatrimestre LIKE "1" AND curso LIKE "3" AND
 
 #6. Retorna un llistat dels professors/es juntament amb el nom del departament al qual estan vinculats/des. El llistat ha de retornar quatre columnes, primer cognom, segon cognom, nom i nom del departament. El resultat estarà ordenat alfabèticament de menor a major pels cognoms i el nom.
 SELECT persona.apellido1, persona.apellido2, persona.nombre, departamento.nombre FROM persona, profesor, departamento WHERE persona.id = profesor.id_profesor AND departamento.id = profesor.id_departamento ORDER BY persona.apellido1 ASC, persona.apellido2 ASC, persona.nombre ASC;
+#Incorrecte
 
 #7. Retorna un llistat amb el nom de les assignatures, any d'inici i any de fi del curs escolar de l'alumne/a amb NIF 26902806M.
 SELECT asignatura.nombre, curso_escolar.anyo_inicio, curso_escolar.anyo_fin FROM alumno_se_matricula_asignatura INNER JOIN persona ON persona.id = alumno_se_matricula_asignatura.id_alumno INNER JOIN asignatura ON asignatura.id = alumno_se_matricula_asignatura.id_asignatura INNER JOIN curso_escolar ON curso_escolar.id = alumno_se_matricula_asignatura.id_curso_escolar WHERE persona.nif LIKE "26902806M";
@@ -183,6 +189,8 @@ SELECT COUNT(id) FROM persona WHERE tipo LIKE "alumno";
 
 #2. Calcula quants/es alumnes van néixer en 1999.
 SELECT COUNT(id) FROM persona WHERE tipo LIKE "alumno" AND fecha_nacimiento LIKE "1999%";
+#Per preguntar per anys, també pots fer servir YEAR().
+SELECT COUNT(id) FROM persona WHERE tipo LIKE "alumno" AND YEAR(fecha_nacimiento) LIKE "1999";
 
 #3. Calcula quants/es professors/es hi ha en cada departament. El resultat només ha de mostrar dues columnes, una amb el nom del departament i una altra amb el nombre de professors/es que hi ha en aquest departament. El resultat només ha d'incloure els departaments que tenen professors/es associats i haurà d'estar ordenat de major a menor pel nombre de professors/es.
 SELECT departamento.nombre AS "Nom del departament", COUNT(profesor.id_profesor) AS "Nombre de professors/es" FROM departamento RIGHT JOIN profesor ON profesor.id_departamento = departamento.id GROUP BY departamento.nombre ORDER BY COUNT(profesor.id_profesor) DESC;
@@ -192,3 +200,19 @@ SELECT departamento.nombre AS "Nom del departament", COUNT(profesor.id_profesor)
 
 #5. Retorna un llistat amb el nom de tots els graus existents en la base de dades i el nombre d'assignatures que té cadascun. Té en compte que poden existir graus que no tenen assignatures associades. Aquests graus també han d'aparèixer en el llistat. El resultat haurà d'estar ordenat de major a menor pel nombre d'assignatures.
 SELECT grado.nombre AS "Nom del grau", COUNT(asignatura.id) AS "Nombre d'assignatures" FROM grado LEFT JOIN asignatura ON asignatura.id_grado = grado.id GROUP BY grado.nombre ORDER BY COUNT(asignatura.id) DESC;
+
+#6. Retorna un llistat amb el nom de tots els graus existents en la base de dades i el nombre d'assignatures que té cadascun, dels graus que tinguin més de 40 assignatures associades.
+SELECT grado.nombre AS "Nom del grau", COUNT(asignatura.id) AS "Nombre d'assignatures" FROM grado LEFT JOIN asignatura ON asignatura.id_grado = grado.id GROUP BY grado.nombre HAVING COUNT(asignatura.id_grado) > 40;
+
+#7. Retorna un llistat que mostri el nom dels graus i la suma del nombre total de crèdits que hi ha per a cada tipus d'assignatura. El resultat ha de tenir tres columnes: nom del grau, tipus d'assignatura i la suma dels crèdits de totes les assignatures que hi ha d'aquest tipus.
+*****
+SELECT grado.nombre AS "Nom del grau", asignatura.tipo, COUNT(asignatura.id_grado) FROM asignatura RIGHT JOIN grado ON asignatura.id = grado.id GROUP BY asignatura.id_grado;
+
+
+#8. Retorna un llistat que mostri quants/es alumnes s'han matriculat d'alguna assignatura en cadascun dels cursos escolars. El resultat haurà de mostrar dues columnes, una columna amb l'any d'inici del curs escolar i una altra amb el nombre d'alumnes matriculats/des.
+
+#9. Retorna un llistat amb el nombre d'assignatures que imparteix cada professor/a. El llistat ha de tenir en compte aquells professors/es que no imparteixen cap assignatura. El resultat mostrarà cinc columnes: id, nom, primer cognom, segon cognom i nombre d'assignatures. El resultat estarà ordenat de major a menor pel nombre d'assignatures.
+
+#10. Retorna totes les dades de l'alumne més jove.
+
+#11. Retorna un llistat amb els professors/es que tenen un departament associat i que no imparteixen cap assignatura.
